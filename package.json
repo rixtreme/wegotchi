@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "build-watch": "tsc -w",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,5 +18,9 @@
   "bugs": {
     "url": "https://github.com/rixtreme/wegotchi/issues"
   },
-  "homepage": "https://github.com/rixtreme/wegotchi#readme"
+  "homepage": "https://github.com/rixtreme/wegotchi#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^3.5.3"
+  }
 }
