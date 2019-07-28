@@ -66,11 +66,13 @@ class TrainingState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        const experienceChange = 1/pet.getInfo().level;
+
         pet.setIntervalChange({
             hp: -0.2,
             stress: +0.2,
             boredom: -0.2,
-            experience: +0.2
+            experience: experienceChange
         });
     }
 }
@@ -96,11 +98,13 @@ class HuntingState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        const experienceChange = 1/pet.getInfo().level;
+
         pet.setIntervalChange({
             hp: -0.2,
             stress: +0.2,
             boredom: -0.2,
-            experience: +0.2
+            experience: experienceChange
         });
     }
 }
@@ -178,7 +182,7 @@ class PetContext {
     public constructor(name: string) {
         this._info = {
             name: name,
-            level: 0,
+            level: 1,
             state: StateType.Idle,
             hp: 100,
             stress: 10,
@@ -204,6 +208,11 @@ class PetContext {
 
         if (this._info.hp <= 0 && this._info.stress >= 100 && this._info.boredom >= 100) {
             this.setState(new DeadState());
+        }
+
+        if (this._info.experience >= 100) {
+            this._info.level += 1;
+            this._info.experience = 0;
         }
     }
 
@@ -248,13 +257,17 @@ async function waitAsync(ms: number): Promise<void> {
 }
 
 (async () => {
-    const interval = 300;
+    const interval = 30;
     let elapsedTime = 0;
 
     const pet = new PetContext("damas");
     while (pet.getInfo().state !== StateType.Dead) {
         pet.onInterval();
         console.log(pet.getInfo());
+
+        if (elapsedTime > 10000 && elapsedTime < 60000) {
+            pet.setState(new TrainingState());
+        }
 
         await waitAsync(interval);
         elapsedTime += interval;
