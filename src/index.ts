@@ -12,7 +12,16 @@ enum StateType {
     Dead = "dead"
 }
 
+interface IntervalChange {
+    hp: number;
+    stress: number;
+    boredom: number;
+    experience: number;
+}
+
 abstract class State {
+    private _pet: PetContext;
+
     constructor(public type: StateType) {
     }
 
@@ -27,6 +36,12 @@ class IdleState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        pet.setIntervalChange({
+            hp: -0.2,
+            stress: 0.2,
+            boredom: 0.2,
+            experience: 0
+        });
     }
 }
 
@@ -114,9 +129,9 @@ interface PetInfo {
 
 class PetContext {
     private _state: State;
-    private _prevState: State;
-    
+    private _prevState: State;    
     private _info: PetInfo;
+    private _intervalChange: IntervalChange;
 
     public constructor(name: string) {
         this.setState(new IdleState());
@@ -129,6 +144,19 @@ class PetContext {
             boredom: 10,
             experience: 0
         }
+    }
+
+    public onInterval() {
+        console.log(`Updating pet info at state: ${this._state.type}`);
+
+        this._info.hp += this._intervalChange.hp;
+        this._info.stress += this._intervalChange.stress;
+        this._info.boredom += this._intervalChange.boredom;
+        this._info.experience += this._intervalChange.experience;
+    }
+
+    public setIntervalChange(intervalChange: IntervalChange) {
+        this._intervalChange = intervalChange;
     }
 
     public setState(newState: State) {
@@ -170,6 +198,7 @@ async function waitAsync(ms: number): Promise<void> {
 
     let elapsedTime = 0;
     while (pet.getInfo().state !== StateType.Dead) {
+        pet.onInterval();
         console.log(pet.getInfo());
 
         await waitAsync(interval);
