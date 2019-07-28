@@ -38,8 +38,8 @@ class IdleState extends State {
     public onStateChanged(pet: PetContext): void {
         pet.setIntervalChange({
             hp: -0.2,
-            stress: 0.2,
-            boredom: 0.2,
+            stress: +0.2,
+            boredom: +0.2,
             experience: 0
         });
     }
@@ -51,6 +51,12 @@ class SleepingState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        pet.setIntervalChange({
+            hp: +0.2,
+            stress: -0.2,
+            boredom: 0,
+            experience: 0
+        });
     }
 }
 
@@ -60,6 +66,12 @@ class TrainingState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        pet.setIntervalChange({
+            hp: -0.2,
+            stress: +0.2,
+            boredom: -0.2,
+            experience: +0.2
+        });
     }
 }
 
@@ -69,6 +81,12 @@ class SickState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        pet.setIntervalChange({
+            hp: -0.2,
+            stress: +0.2,
+            boredom: +0.2,
+            experience: 0
+        });
     }
 }
 
@@ -78,6 +96,12 @@ class HuntingState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        pet.setIntervalChange({
+            hp: -0.2,
+            stress: +0.2,
+            boredom: -0.2,
+            experience: +0.2
+        });
     }
 }
 
@@ -87,6 +111,12 @@ class PlayingState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        pet.setIntervalChange({
+            hp: -0.2,
+            stress: -0.2,
+            boredom: -0.2,
+            experience: +0.1
+        });
     }
 }
 
@@ -96,6 +126,12 @@ class EatingState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        pet.setIntervalChange({
+            hp: +0.2,
+            stress: -0.2,
+            boredom: -0.1,
+            experience: 0
+        });
     }
 }
 
@@ -105,6 +141,12 @@ class HealingState extends State {
     }
 
     public onStateChanged(pet: PetContext): void {
+        pet.setIntervalChange({
+            hp: +0.4,
+            stress: -0.1,
+            boredom: 0,
+            experience: 0
+        });
     }
 }
 
@@ -134,7 +176,6 @@ class PetContext {
     private _intervalChange: IntervalChange;
 
     public constructor(name: string) {
-        this.setState(new IdleState());
         this._info = {
             name: name,
             level: 0,
@@ -144,6 +185,8 @@ class PetContext {
             boredom: 10,
             experience: 0
         }
+
+        this.setState(new IdleState());
     }
 
     public onInterval() {
@@ -153,6 +196,15 @@ class PetContext {
         this._info.stress += this._intervalChange.stress;
         this._info.boredom += this._intervalChange.boredom;
         this._info.experience += this._intervalChange.experience;
+
+        this._info.hp = this._info.hp > 100 ? 100 : this._info.hp < 0 ? 0 : this._info.hp;
+        this._info.stress = this._info.stress > 100 ? 100 : this._info.stress < 0 ? 0 : this._info.stress;
+        this._info.boredom = this._info.boredom > 100 ? 100 : this._info.boredom < 0 ? 0 : this._info.boredom;
+        this._info.experience = this._info.experience > 100 ? 100 : this._info.experience < 0 ? 0 : this._info.experience;
+
+        if (this._info.hp <= 0 && this._info.stress >= 100 && this._info.boredom >= 100) {
+            this.setState(new DeadState());
+        }
     }
 
     public setIntervalChange(intervalChange: IntervalChange) {
@@ -162,6 +214,8 @@ class PetContext {
     public setState(newState: State) {
         const prevState = this._state;
         this._state = newState;
+        console.log(this._info);
+        this._info.state = this._state.type;
         this._state.onStateChanged(this);
     }
 
@@ -178,25 +232,26 @@ class PetContext {
     }
 }
 
-const pet = new PetContext("damas");
+// const pet = new PetContext("damas");
 
-pet.setState(new EatingState()); // need money, increases hp, reduce stress, reduce boredom
-pet.setState(new SleepingState()); // increase hp, reduce stress, cannot be applied for more than a few times a day
-pet.setState(new PlayingState()); // reduce hp a little, reduce stress, reduce boredom
-pet.setState(new HealingState()); // need money, increase hp, increase stress a little, make recover from sick
-pet.setState(new TrainingState()); // need money, decrease hp, increase stress, increase experience, reduce boredom
-pet.setState(new HuntingState()); // increase money, reduce hp, increase stress, increase experience, reduce boredom
+// pet.setState(new EatingState()); // need money, increases hp, reduce stress, reduce boredom
+// pet.setState(new SleepingState()); // increase hp, reduce stress, cannot be applied for more than a few times a day
+// pet.setState(new PlayingState()); // reduce hp a little, reduce stress, reduce boredom
+// pet.setState(new HealingState()); // need money, increase hp, increase stress a little, make recover from sick
+// pet.setState(new TrainingState()); // need money, decrease hp, increase stress, increase experience, reduce boredom
+// pet.setState(new HuntingState()); // increase money, reduce hp, increase stress, increase experience, reduce boredom
 
-pet.setState(new IdleState());
+// pet.setState(new IdleState());
 
 async function waitAsync(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 (async () => {
-    const interval = 3000;
-
+    const interval = 300;
     let elapsedTime = 0;
+
+    const pet = new PetContext("damas");
     while (pet.getInfo().state !== StateType.Dead) {
         pet.onInterval();
         console.log(pet.getInfo());
