@@ -26,8 +26,6 @@ abstract class State {
     }
 
     public abstract onStateChanged(pet: PetContext): void;
-
-    // abstract writeName(context: PetContext, name: string): void;
 }
 
 class IdleState extends State {
@@ -190,7 +188,7 @@ class PetContext {
             experience: 0
         }
 
-        this.setState(new IdleState());
+        this.setState(StateType.Idle);
     }
 
     public onInterval() {
@@ -207,7 +205,7 @@ class PetContext {
         this._info.experience = this._info.experience > 100 ? 100 : this._info.experience < 0 ? 0 : this._info.experience;
 
         if (this._info.hp <= 0 && this._info.stress >= 100 && this._info.boredom >= 100) {
-            this.setState(new DeadState());
+            this.setState(StateType.Dead);
         }
 
         if (this._info.experience >= 100) {
@@ -220,10 +218,45 @@ class PetContext {
         this._intervalChange = intervalChange;
     }
 
-    public setState(newState: State) {
+    public setState(type: StateType) {
+        if (!!this._state && this._info.state === type) {
+            return;
+        }
+
+        let newState: State;
+        switch (type) {
+            case StateType.Dead:
+                newState = new DeadState();
+                break;
+            case StateType.Eating:
+                newState = new EatingState();
+                break;
+            case StateType.Healing:
+                newState = new HealingState();
+                break;
+            case StateType.Hunting:
+                newState = new HuntingState();
+                break;
+            case StateType.Playing:
+                newState = new PlayingState();
+                break;
+            case StateType.Sick:
+                newState = new SickState();
+                break;
+            case StateType.Sleeping:
+                newState = new SleepingState();
+                break;
+            case StateType.Training:
+                newState = new TrainingState();
+                break;
+            case StateType.Idle:
+            default:
+                newState = new IdleState();
+                break;
+        }
+
         const prevState = this._state;
         this._state = newState;
-        console.log(this._info);
         this._info.state = this._state.type;
         this._state.onStateChanged(this);
     }
@@ -265,8 +298,24 @@ async function waitAsync(ms: number): Promise<void> {
         pet.onInterval();
         console.log(pet.getInfo());
 
-        if (elapsedTime > 10000 && elapsedTime < 60000) {
-            pet.setState(new TrainingState());
+        if (elapsedTime > 3000 && elapsedTime < 6000) {
+            pet.setState(StateType.Training);
+        } else if (elapsedTime > 6000 && elapsedTime < 12000) {
+            pet.setState(StateType.Eating);
+        } else if (elapsedTime > 12000 && elapsedTime < 18000) {
+            pet.setState(StateType.Hunting);
+        } else if (elapsedTime > 18000 && elapsedTime < 24000) {
+            pet.setState(StateType.Healing);
+        } else if (elapsedTime > 24000 && elapsedTime < 30000) {
+            pet.setState(StateType.Playing);
+        } else if (elapsedTime > 30000 && elapsedTime < 36000) {
+            pet.setState(StateType.Sleeping);
+        } else if (elapsedTime > 36000 && elapsedTime < 40000) {
+            pet.setState(StateType.Sick);
+        } else if (elapsedTime > 40000 && elapsedTime < 46000) {
+            pet.setState(StateType.Healing);
+        } else if (elapsedTime > 46000) {
+            pet.setState(StateType.Idle);
         }
 
         await waitAsync(interval);
